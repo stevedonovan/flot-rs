@@ -69,6 +69,14 @@ where I: IntoIterator<Item=&'a T>+'a, F: Fn(f64)->f64 + 'a,
     Box::new(x.into_iter().map(move |&x| { let fv = x.into(); (fv,f(fv))}))
 }
 
+pub fn mapv<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
+where I: IntoIterator<Item=T>+'a, F: Fn(f64)->f64 + 'a,
+    T: Into<f64>+Copy+'a
+{
+    Box::new(x.into_iter().map(move |x| { let fv = x.into(); (fv,f(fv))}))
+}
+
+
 enum PlotKind {
     Lines,
     Points,
