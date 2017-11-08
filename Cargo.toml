@@ -1,0 +1,18 @@
+[package]
+name = "flot"
+version = "0.1.1"
+authors = ["Steve Donovan <steve.j.donovan@gmail.com>"]
+
+description = "Rust interface to the Mosquitto MQTT broker client"
+documentation = "https://docs.rs/flot-rs"
+repository = "https://github.com/stevedonovan/flot-rs"
+readme = "readme.md"
+license="MIT"
+
+keywords = ["flot","charts","command-line","graphs"]
+
+
+[dependencies]
+json = "0.11.8"
+typed-arena = "1.3.0"
+
