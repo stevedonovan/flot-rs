@@ -6,9 +6,10 @@ fn make_gaussian(xvalues: &[f64], m: f64, s: f64) -> Vec<(f64,f64)> {
     use std::f64::consts::PI;
     let s2 = 2.0*s*s;
     let norm = 1.0/(s2*PI).sqrt();
-    xvalues.iter()
-        .map(|&x| (x, norm*(-(x-m).powi(2)/s2).exp()))
-        .collect()        
+    flot::mapr (
+        xvalues,
+        move |x| norm*(-(x-m).powi(2)/s2).exp()
+    ).collect()        
 }
 
 fn main() {

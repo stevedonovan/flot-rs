@@ -1,6 +1,6 @@
 // testing flot.rs
 extern crate flot;
-use flot::{Page,Corner,MapTuple};
+use flot::{Page,Corner};
 
 fn main() {
     let line_data = vec![(0.0,1.0),(1.0,4.5)];
@@ -25,8 +25,7 @@ fn main() {
     
     let xvalues: Vec<_> = flot::range(0.0,8.0,0.2).collect();    
     cs.lines("sin",xvalues.iter().map(|&x| (x, x.sin())));
-    cs.lines("cos",xvalues.as_slice().map(|x| x.cos())).color("green");
-    //cs.lines("cos",flot::map(&xvalues,|x| x.cos()));
+    cs.lines("cos",flot::mapr(&xvalues,f64::cos));
     
     let xdata = [1,2,5];
     let ydata = vec![0.5,1.0,0.5];

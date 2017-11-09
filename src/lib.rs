@@ -34,27 +34,6 @@ impl Iterator for FRange {
     }
 }
 
-pub trait MapTuple<'a> {
-    fn map<F: Fn(f64)->f64 + 'a>(&self, f: F) -> Box<Iterator<Item=(f64,f64)>+'a>;
-}
-
-impl <'a>MapTuple<'a> for &'a [f64] {
-    fn map<F: Fn(f64)->f64 + 'a>(&self, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> {
-        Box::new(self.iter().map(move |&x| (x, f(x))))
-    }
-}
-
-/*
-impl <'a>MapTuple<'a> for Vec<f64> {
-    fn map<F: Fn(f64)->f64 + 'a>(&self, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> {
-        Box::new(self.iter().map(move |&x| (x, f(x))))
-        //self.as_slice().map(f)
-    }
-}
-// */
-
-
-
 pub fn zip<'a,I1,I2,T1,T2>(x: I1, y: I2) -> Box<Iterator<Item=(f64,f64)>+'a> 
 where I1: IntoIterator<Item=&'a T1>+'a, I2: IntoIterator<Item=&'a T2>+'a,
     T1: Into<f64>+Copy+'a, T2: Into<f64>+Copy+'a
@@ -62,7 +41,7 @@ where I1: IntoIterator<Item=&'a T1>+'a, I2: IntoIterator<Item=&'a T2>+'a,
     Box::new(x.into_iter().zip(y).map(|(&x,&y)| (x.into(),y.into())))
 }
 
-pub fn map<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
+pub fn mapr<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
 where I: IntoIterator<Item=&'a T>+'a, F: Fn(f64)->f64 + 'a,
     T: Into<f64>+Copy+'a
 {
@@ -177,7 +156,7 @@ impl Series {
         self
     }
 
-    pub fn bar_width(&mut self, width: f64) -> &mut Self {
+    pub fn width(&mut self, width: f64) -> &mut Self {
         match self.kind {
             PlotKind::Bars => self.kind_ref()["barWidth"] = width.into(),
             _ => panic!("bar_width() only applies to bars")
@@ -202,8 +181,8 @@ impl Corner {
         use Corner::*;
         match *self {
             None => "none",
-            TopRight => "nw",
-            TopLeft => "ne",
+            TopRight => "ne",
+            TopLeft => "nw",
             BottomRight => "sw",
             BottomLeft => "se",
         }
