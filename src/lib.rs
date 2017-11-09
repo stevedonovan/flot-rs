@@ -9,13 +9,15 @@ use json::JsonValue;
 use std::io;
 use std::io::Write;
 
-// this should probably live somewhere else, but where?
+/// Iterator type for floating-point range iterator
 pub struct FRange {
     val: f64,
     end: f64,
     incr: f64
 }
 
+/// generates an iterator between `x1` and `x2`, step `skip`
+/// over floating point numbers.
 pub fn range(x1: f64, x2: f64, skip: f64) -> FRange {
     FRange {val: x1, end: x2, incr: skip}
 }
@@ -34,6 +36,8 @@ impl Iterator for FRange {
     }
 }
 
+/// join two iterators of references together to produce point tuples.
+/// The reference types can be anything that converts to `f64`
 pub fn zip<'a,I1,I2,T1,T2>(x: I1, y: I2) -> Box<Iterator<Item=(f64,f64)>+'a> 
 where I1: IntoIterator<Item=&'a T1>+'a, I2: IntoIterator<Item=&'a T2>+'a,
     T1: Into<f64>+Copy+'a, T2: Into<f64>+Copy+'a
@@ -41,6 +45,8 @@ where I1: IntoIterator<Item=&'a T1>+'a, I2: IntoIterator<Item=&'a T2>+'a,
     Box::new(x.into_iter().zip(y).map(|(&x,&y)| (x.into(),y.into())))
 }
 
+/// map an iterator of references with a function producing point tuples.
+/// Like `zip`, the reference type can be anything that converts to `f64`
 pub fn mapr<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
 where I: IntoIterator<Item=&'a T>+'a, F: Fn(f64)->f64 + 'a,
     T: Into<f64>+Copy+'a
@@ -48,6 +54,8 @@ where I: IntoIterator<Item=&'a T>+'a, F: Fn(f64)->f64 + 'a,
     Box::new(x.into_iter().map(move |&x| { let fv = x.into(); (fv,f(fv))}))
 }
 
+/// map an iterator of values with a function producing point tuples.
+/// The value type can be anything that converts to `f64`
 pub fn mapv<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
 where I: IntoIterator<Item=T>+'a, F: Fn(f64)->f64 + 'a,
     T: Into<f64>+Copy+'a
@@ -72,6 +80,7 @@ impl PlotKind {
     }
 }
 
+/// describes a data series which can be plotted either as lines, points or bars
 pub struct Series {
     data: JsonValue,
     kind: PlotKind,
@@ -98,36 +107,43 @@ impl Series {
         &mut self.data[self.kind.to_str()]
     }
     
+    /// set the xaxis for this series (2 for second)    
     pub fn xaxis(&mut self, which: u32) -> &mut Self {
         self.data["xaxis"] = which.into();
         self        
-    }   
+    }
     
+    /// set the yaxis for this series (2 for second)    
     pub fn yaxis(&mut self, which: u32) -> &mut Self {
         self.data["yaxis"] = which.into();
         self        
     }
 
+    /// set the fill colour underneath lines or in bars as an alpha value.
     pub fn fill(&mut self, opacity: f32) -> &mut Self {
         self.kind_ref()["fill"] = opacity.into();
         self
     }
-
+    
+    /// set the fill colour underneath lines or in bars as an HTML colour.
     pub fn fill_color(&mut self, color: &str) -> &mut Self {
         self.kind_ref()["fillColor"] = color.into();
         self
     }
     
+    /// set the line colour as an HTML colour.
     pub fn color(&mut self, color: &str) -> &mut Self {
         self.data["color"] = color.into();
         self
     }    
 
+    /// width of the line - zero for no shadow.
     pub fn line_width(&mut self, size: u32) -> &mut Self {
         self.kind_ref()["lineWidth"] = size.into();
         self
     }
 
+    /// radius for points (points only)
     pub fn radius(&mut self, size: u32) -> &mut Self {
         match self.kind {
             PlotKind::Points => self.kind_ref()["radius"] = size.into(),
@@ -136,6 +152,7 @@ impl Series {
         self
     }
 
+    /// symbol for points (points only)
     pub fn symbol(&mut self, name: &str) -> &mut Self {
         match self.kind {
             PlotKind::Points => {
@@ -146,8 +163,8 @@ impl Series {
         }
         self
     }
-
-
+    
+    /// draw steps between points (lines only)    
     pub fn steps(&mut self) -> &mut Self {
         match self.kind {
             PlotKind::Lines => self.kind_ref()["steps"] = true.into(),
@@ -156,6 +173,7 @@ impl Series {
         self
     }
 
+    /// set width of bars (bars only)
     pub fn width(&mut self, width: f64) -> &mut Self {
         match self.kind {
             PlotKind::Bars => self.kind_ref()["barWidth"] = width.into(),
@@ -168,6 +186,7 @@ impl Series {
 
 }
 
+/// describes position of legend (None for no legend)
 pub enum Corner {
     None,
     TopRight,
@@ -189,6 +208,7 @@ impl Corner {
     }
 }
 
+/// describes sides of plot for axis position
 pub enum Side {
     Right,
     Left,
@@ -208,6 +228,7 @@ impl Side {
     }
 }
 
+/// represents an axis
 pub struct Axis<'a> {
     which: &'static str,
     plot: &'a mut Plot,
@@ -230,16 +251,19 @@ impl <'a> Axis<'a> {
         self
     }
     
+    /// force minimum value on axis
     pub fn min(&mut self, min: f64) -> &mut Self {
         self.set_option("min",min.into());
         self
     }
     
+    /// force maximum value on axis
     pub fn max(&mut self, max: f64) -> &mut Self {
         self.set_option("max",max.into());
         self
     }  
 
+    /// set both minimum and maximum on axis
     pub fn bounds(&mut self, min: Option<f64>, max: Option<f64>) -> &mut Self {
         if let Some(min) = min {
             self.min(min);
@@ -250,6 +274,7 @@ impl <'a> Axis<'a> {
         self
     }
     
+    /// set the position of an axis
     pub fn position(&mut self, side: Side) -> &mut Self {
         let pos = side.to_str();
         if pos == "right" {
@@ -258,6 +283,8 @@ impl <'a> Axis<'a> {
         self.set_option("position",pos.into())
     }
 
+    /// indicates that this axis uses time values.
+    /// These must be in milliseconds
     pub fn time(&mut self) -> &mut Self {
         self.plot.time = true;
         self.set_option("mode","time".into());
@@ -266,6 +293,7 @@ impl <'a> Axis<'a> {
 
 }
 
+/// represents 'markings' or plot annotations.
 pub struct Markings<'a> {
     plot: &'a mut Plot,
 }
@@ -285,22 +313,27 @@ impl <'a> Markings<'a> {
         self
     }
     
+    /// vertical band over plot
     pub fn vertical_area(&mut self, p1: f64, p2: f64) -> &mut Self {
         self.add_marking(object!{"xaxis" => object!{"from"=>p1,"to"=>p2 } })
     }
     
+    /// horizontal band over plot
     pub fn horizontal_area(&mut self, p1: f64, p2: f64) -> &mut Self {
         self.add_marking(object!{"yaxis" => object!{"from"=>p1,"to"=>p2 } })
     }
     
+    /// vertical line at x position
     pub fn vertical_line(&mut self, pos: f64) -> &mut Self {
         self.vertical_area(pos,pos)
     }
     
+    /// horizontal line at y position
     pub fn horizontal_line(&mut self, pos: f64) -> &mut Self {
         self.horizontal_area(pos,pos)
     }
     
+    /// rectangular area specified as (x1,x2,y1,y2)
     pub fn area(&mut self, x1: f64, x2: f64, y1: f64, y2: f64) -> &mut Self {
         self.add_marking(object!{
             "xaxis" => object!{"from"=>x1,"to"=>x2 },
@@ -308,6 +341,7 @@ impl <'a> Markings<'a> {
         })
     }
 
+    /// set the color of the last marking defined
     pub fn color(&mut self, color: &str) -> &mut Self {
         {    
             let mut arr = self.markings();
@@ -319,6 +353,7 @@ impl <'a> Markings<'a> {
 
 }
 
+/// represents a particular plot
 pub struct Plot {
     series: Arena<Series>,
     placeholder: String,
@@ -340,38 +375,48 @@ impl Plot {
         }
     }
     
+    /// the size in pixels (width,height) of the plot area
     pub fn size(&mut self,width:u32,height:u32) -> &mut Self {
         self.bounds = (width,height);
         self
     }
 
+    /// x axis object
     pub fn xaxis<'a>(&'a mut self) -> Axis<'a> {
         Axis::new("xaxes",self,1)
     }
 
+    /// y axis object
     pub fn yaxis<'a>(&'a mut self) -> Axis<'a> {
         Axis::new("yaxes",self,1)
     }
     
+    /// second y axis object
     pub fn yaxis2<'a>(&'a mut self) -> Axis<'a> {
         Axis::new("yaxes",self,2)
     }    
 
+    /// create a data series with individual points
+    /// The data is anything that converts to an iterator
+    /// of `(f64,f64)` tuples
     pub fn points<T>(&self, label: &str, data: T) -> &mut Series
     where T: IntoIterator<Item=(f64,f64)> {
         self.series.alloc(Series::new(PlotKind::Points,label,data))
     }
 
+    /// create a data series joined with lines
     pub fn lines<T>(&self, label: &str, data: T) -> &mut Series
     where T: IntoIterator<Item=(f64,f64)> {
         self.series.alloc(Series::new(PlotKind::Lines,label,data))
     }
 
+    /// create a data series with bars (histogram).
     pub fn bars<T>(&self, label: &str, data: T) -> &mut Series
     where T: IntoIterator<Item=(f64,f64)> {
         self.series.alloc(Series::new(PlotKind::Bars,label,data))
     }
 
+    /// position of axis (Corner::None to hide)
     pub fn legend_pos(&mut self, pos: Corner) -> &mut Self {
         let obj = match pos {
             Corner::None => object!{ "show" => false },
@@ -386,6 +431,7 @@ impl Plot {
         self
     }
     
+    /// object to create markings like lines and areas
     pub fn markings<'a>(&'a mut self) -> Markings<'a> {
         Markings::new(self)
     }
@@ -420,7 +466,6 @@ impl Plot {
         write!(f,"$.plot($(\"#{}\"),{},{});\n",self.placeholder,data,self.options)
     }
 
-
 }
 
 use std::env;
@@ -428,6 +473,7 @@ use std::fs::File;
 use std::mem;
 use std::cell::Cell;
 
+/// represents a collection of plots
 pub struct Page {
     plots: Arena<Plot>,
     count: Cell<usize>,
@@ -446,6 +492,7 @@ impl Page {
         }
     }
 
+    /// create a new plot
     pub fn plot(&self) -> &mut Plot {
         let count = &self.count;
         count.set(count.get() + 1);
@@ -453,6 +500,7 @@ impl Page {
         self.plots.alloc(Plot::new(&name))
     }
 
+    /// render the page as HTML to the given file
     pub fn render(&self, file: &str) -> io::Result<()> {
         // this is deeply dubious. In an ideal world with non-lexical lifetimes,
         // this could be a self method, since it is _only_ called after all

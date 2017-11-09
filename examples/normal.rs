@@ -1,5 +1,3 @@
-// GDP growth
-// testing flot.rs
 extern crate flot;
 
 fn make_gaussian(xvalues: &[f64], m: f64, s: f64) -> Vec<(f64,f64)> {
@@ -15,7 +13,7 @@ fn make_gaussian(xvalues: &[f64], m: f64, s: f64) -> Vec<(f64,f64)> {
 fn main() {
     let page = flot::Page::new();
 
-    let p = page.plot();
+    let p = page.plot().size(500,300);
     let xvalues = flot::range(0.0,10.0,0.1).collect::<Vec<_>>();
     p.lines("norm s=1.0",make_gaussian(&xvalues,5.0,1.0));
     p.lines("norm s=0.7",make_gaussian(&xvalues,6.0,0.5));
