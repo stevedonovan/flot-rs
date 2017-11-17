@@ -45,6 +45,16 @@ where I1: IntoIterator<Item=&'a T1>+'a, I2: IntoIterator<Item=&'a T2>+'a,
     Box::new(x.into_iter().zip(y).map(|(&x,&y)| (x.into(),y.into())))
 }
 
+/// data from an iterator of references plotted against index.
+/// Like `zip`, the reference type can be anything that converts to `f64`
+pub fn valr<'a,I,T>(y: I) -> Box<Iterator<Item=(f64,f64)>+'a> 
+where I: IntoIterator<Item=&'a T>+'a,
+    T: Into<f64>+Copy+'a
+{
+    Box::new((0..).into_iter().zip(y).map(|(x,&y)| (x.into(),y.into())))
+}
+
+
 /// map an iterator of references with a function producing point tuples.
 /// Like `zip`, the reference type can be anything that converts to `f64`
 pub fn mapr<'a,I,T,F>(x: I, f: F) -> Box<Iterator<Item=(f64,f64)>+'a> 
@@ -95,8 +105,9 @@ impl Series {
         for p in data.into_iter() {
             arr.push(array![p.0,p.1]).unwrap();
         }
+        let jlbl = if label.is_empty() {JsonValue::Null} else {label.into()};
         let mut data = object! {
-            "label" => label,
+            "label" => jlbl,
             "data" => arr
         };
         data[kind.to_str()] = object!{"show" => true};
@@ -396,15 +407,16 @@ impl Plot {
         Axis::new("yaxes",self,2)
     }    
 
-    /// create a data series with individual points
+    /// create a data series with individual points.
     /// The data is anything that converts to an iterator
-    /// of `(f64,f64)` tuples
+    /// of `(f64,f64)` tuples. If label is the empty string,
+    /// don't show in legend
     pub fn points<T>(&self, label: &str, data: T) -> &mut Series
     where T: IntoIterator<Item=(f64,f64)> {
         self.series.alloc(Series::new(PlotKind::Points,label,data))
     }
 
-    /// create a data series joined with lines
+    /// create a data series joined with lines.
     pub fn lines<T>(&self, label: &str, data: T) -> &mut Series
     where T: IntoIterator<Item=(f64,f64)> {
         self.series.alloc(Series::new(PlotKind::Lines,label,data))
