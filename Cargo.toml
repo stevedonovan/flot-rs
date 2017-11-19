@@ -1,6 +1,6 @@
 [package]
 name = "flot"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Steve Donovan <steve.j.donovan@gmail.com>"]
 
 description = "Rust interface to the Mosquitto MQTT broker client"
@@ -10,7 +10,6 @@ readme = "readme.md"
 license="MIT"
 
 keywords = ["flot","charts","command-line","graphs"]
-
 
 [dependencies]
 json = "0.11.8"

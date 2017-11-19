@@ -7,16 +7,18 @@ fn make_gaussian(xvalues: &[f64], m: f64, s: f64) -> Vec<(f64,f64)> {
     flot::mapr (
         xvalues,
         move |x| norm*(-(x-m).powi(2)/s2).exp()
-    ).collect()        
+    ).collect()
 }
 
 fn main() {
-    let page = flot::Page::new();
+    let page = flot::Page::new("");
 
-    let p = page.plot().size(500,300);
+    let p = page.plot("Normal distribution")
+        .size(500,300);
+    p.grid().color("white").background_color("black");
     let xvalues = flot::range(0.0,10.0,0.1).collect::<Vec<_>>();
-    p.lines("norm s=1.0",make_gaussian(&xvalues,5.0,1.0));
-    p.lines("norm s=0.7",make_gaussian(&xvalues,6.0,0.5));
+    p.lines("norm σ=1.0",make_gaussian(&xvalues,5.0,1.0));
+    p.lines("norm σ=0.7",make_gaussian(&xvalues,6.0,0.5));
 
     page.render("normal.html").unwrap();
 
