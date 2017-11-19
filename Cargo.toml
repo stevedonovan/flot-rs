@@ -1,10 +1,10 @@
 [package]
 name = "flot"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Steve Donovan <steve.j.donovan@gmail.com>"]
 
-description = "Rust interface to the Mosquitto MQTT broker client"
-documentation = "https://docs.rs/flot-rs"
+description = "Generate HTML documents with embedded charts using Flot"
+documentation = "https://docs.rs/flot"
 repository = "https://github.com/stevedonovan/flot-rs"
 readme = "readme.md"
 license="MIT"
